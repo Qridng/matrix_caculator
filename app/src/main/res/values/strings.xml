@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">matrix caculator</string>
+    <string name="matrix_A">Matrix_A</string>
+    <string name="matrix_B">Matrix_B</string>
+    <string name="textView2">TextView</string>
+
+</resources>

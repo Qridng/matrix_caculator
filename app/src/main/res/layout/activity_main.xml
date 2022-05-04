@@ -291,10 +291,11 @@
                 android:orientation="horizontal">
 
                 <Button
-                    android:id="@+id/button7"
-                    android:layout_width="wrap_content"
+                    android:id="@+id/digital_recognition"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:onClick="recognition"
                     android:text="digital recognition" />
             </LinearLayout>
 
@@ -302,21 +303,21 @@
 
         <TableRow
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="320dp">
 
             <ScrollView
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent">
 
                 <LinearLayout
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:layout_gravity="center"
                     android:gravity="center"
                     android:orientation="vertical">
 
                     <TextView
-                        android:id="@+id/textView"
+                        android:id="@+id/Elementary_Operations"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:gravity="center"
@@ -360,24 +361,73 @@
                         android:orientation="horizontal">
 
                         <Button
+                            android:id="@+id/bt_matrix_scalar_multiplication"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:onClick="Matrix_scalar_multiplication"
+                            android:text="A multiply by" />
+
+                        <EditText
+                            android:id="@+id/multiply_edit"
+                            android:layout_width="10dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:ems="10"
+                            android:inputType="number" />
+
+                        <Button
                             android:id="@+id/bt_matrix_transpose"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
                             android:onClick="Matrix_transpose"
                             android:text="A transpose" />
+                    </LinearLayout>
+
+                    <Button
+                        android:id="@+id/bt_matrix_determinant"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="A determinant" />
+
+                    <TextView
+                        android:id="@+id/Decompositions"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center"
+                        android:text="Decompositions"
+                        android:textSize="18sp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
 
                         <Button
-                            android:id="@+id/bt_matrix_scalar_multiplication"
+                            android:id="@+id/bt_matrix_getL"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:onClick="Matrix_scalar_multiplication"
-                            android:text="A scalar multiplication" />
+                            android:text="GET A L" />
+
+                        <Button
+                            android:id="@+id/bt_matrix_getU"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="GET A U" />
                     </LinearLayout>
+
+                    <ImageView
+                        android:id="@+id/imageView"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:srcCompat="@drawable/ic_launcher_background" />
 
                 </LinearLayout>
             </ScrollView>
+
         </TableRow>
 
     </TableLayout>

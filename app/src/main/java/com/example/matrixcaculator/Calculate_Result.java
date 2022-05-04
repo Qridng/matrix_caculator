@@ -5,7 +5,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.os.Bundle;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
+import java.math.BigDecimal;
 
 public class Calculate_Result extends AppCompatActivity {
 
@@ -15,14 +15,14 @@ public class Calculate_Result extends AppCompatActivity {
 
     double[][] Result;
 
-    String Temp=" ";
+    String Temp="";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.result);
 
-        TextView resultTV = (TextView)findViewById(R.id.textView3);
+        TextView resultTV = (TextView)findViewById(R.id.result);
 
         resultTV.setText("");
 
@@ -37,13 +37,29 @@ public class Calculate_Result extends AppCompatActivity {
 
         for(int i = 0; i < Result.length; i++) {
             for(int j = 0; j < Result[i].length; j++) {
-                System.out.print( " " + Result[i][j] );
-                Temp = Temp +Result[i][j] + " ";
+
+
+                if (getDec(Result[i][j])==0) {
+                    Temp = Temp + (int) Result[i][j] + "  ";
+                }
+                else{
+                    Temp = Temp + Result[i][j] + "  ";
+                }
             }
             Temp = Temp + "\n";
         }
         return Temp;
     }
 
+
+    public static int getDec(double input) {
+        String stringIn = String.valueOf(input);
+
+        int i = stringIn.substring(stringIn.indexOf(".")).length() - 1;
+        if (i == 1 && stringIn.substring(stringIn.indexOf(".") + 1).matches("0")) {
+            i--;
+        }
+        return i;
+    }
 
 }

@@ -3,12 +3,13 @@ package com.example.matrixcaculator;
 import android.content.Intent;
 import android.widget.TextView;
 
+import Jama.LUDecomposition;
 import Jama.Matrix;
 
 public class Matrix_Calculate {
 
-    double[][] a={{1,2,3},{4,5,6},{7,8,9}};
-    double[][] b={{4,5,6},{7,8,9},{10,11,12}};
+    static double[][] a={{0,0,0},{0,0,0},{0,0,0}};
+    static double[][] b={{0,0,0},{0,0,0},{0,0,0}};
 
     Matrix A = new Matrix(a);
     Matrix B = new Matrix(b);
@@ -39,13 +40,39 @@ public class Matrix_Calculate {
         return times;
     }
 
+    public Matrix scalar_multiplication(double mul){
+        Matrix multiplication = A.timesEquals(mul);
+        Temp_Matrix = multiplication.getArray();
+        return multiplication;
+    }
+
+    public Matrix transpose(){
+        Matrix transpose = A.transpose();
+        Temp_Matrix = transpose.getArray();
+        return transpose;
+    }
+
+    public Matrix inverse(){
+        Matrix inverse = A.inverse();
+        inverse.getMatrix(0, 2, 0, 2).print(0, 0);
+        Temp_Matrix = inverse.getArray();
+
+        return inverse;
+    }
+
+    public boolean isNonsingular(){
+
+        return true;
+    }
+
     public double[][] getTemp_Matrix() {
        /* System.out.println(String.valueOf(Temp_Matrix[0][0]));*/
         return Temp_Matrix;
     }
 
-    public double[][] inputtext(double A_T,double B_T) {
-        return a;
+    public void inputtext(int x, int y ,double A_T,double B_T) {
+        a[x][y] = A_T;
+        b[x][y] = B_T;
     }
 
     public String getResult(){

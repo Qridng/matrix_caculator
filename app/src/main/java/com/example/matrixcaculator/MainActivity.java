@@ -20,15 +20,20 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.googlecode.tesseract.android.TessBaseAPI;
+
 import org.w3c.dom.Text;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    static TesseractOCR mTessOCR;
+
+    static ImageView imgSrc;
+    static TextView txtResult;
 
     public static final int CAMERA_PERM_CODE = 101;
     public static final int CAMERA_REQUEST_CODE = 102;
-    ImageView selectedImage;
 
     static TextView[] A_T = new TextView[10];
     static TextView[] B_T = new TextView[10];
@@ -40,8 +45,6 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
-        selectedImage = findViewById(R.id.imageView);
 
         A_T[1] = (TextView) findViewById(R.id.matrix_number_A1);
         A_T[2] = (TextView) findViewById(R.id.matrix_number_A2);
@@ -63,6 +66,11 @@ public class MainActivity extends AppCompatActivity {
         B_T[8] = (TextView) findViewById(R.id.matrix_number_B8);
         B_T[9] = (TextView) findViewById(R.id.matrix_number_B9);
 
+        imgSrc = (ImageView) findViewById(R.id.imageView);
+        txtResult = (TextView) findViewById(R.id.digital_result);
+
+        String language = "eng";
+        mTessOCR = new TesseractOCR(this, language);
 
     }
 
@@ -99,7 +107,11 @@ public class MainActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CAMERA_REQUEST_CODE) {
             Bitmap image = (Bitmap) data.getExtras().get("data");
-            selectedImage.setImageBitmap(image);
+            imgSrc.setDrawingCacheEnabled(true);
+            imgSrc.setImageBitmap(image);
+            String ocrResult = ocrWithEnglish();
+            txtResult.setText(ocrResult);
+            imgSrc.setDrawingCacheEnabled(false);
         }
     }
 
@@ -169,7 +181,21 @@ public class MainActivity extends AppCompatActivity {
 
     public void recognition(View view) {
         askCameraPermissions();
+
     }
+
+    public String ocrWithEnglish() {
+        String resString = "";
+
+        imgSrc.setDrawingCacheEnabled(true);
+        Bitmap bitmap = imgSrc.getDrawingCache();
+
+        resString = mTessOCR.getOCRResult(bitmap);
+
+        imgSrc.setDrawingCacheEnabled(false);
+        return  resString;
+    }
+
 }
 
 

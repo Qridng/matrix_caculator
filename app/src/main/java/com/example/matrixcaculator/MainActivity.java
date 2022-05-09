@@ -24,15 +24,31 @@ import org.bytedeco.javacpp.opencv_imgproc;
 import org.bytedeco.javacv.AndroidFrameConverter;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
+import org.opencv.imgproc.Imgproc;
+
 import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
+import static org.bytedeco.javacpp.opencv_imgproc.COLOR_BayerGB2GRAY;
+import static org.bytedeco.javacpp.opencv_imgproc.COLOR_GRAY2BGR;
+import static org.bytedeco.javacpp.opencv_imgproc.COLOR_GRAY2RGB;
+import static org.bytedeco.javacpp.opencv_imgproc.COLOR_RGB2GRAY;
+import static org.bytedeco.javacpp.opencv_imgproc.CV_RGB2GRAY;
+import static org.bytedeco.javacpp.opencv_imgproc.GaussianBlur;
+import static org.bytedeco.javacpp.opencv_imgproc.THRESH_TOZERO;
+import static org.bytedeco.javacpp.opencv_imgproc.blur;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 
 import static android.content.ContentValues.TAG;
 
 
+import static org.bytedeco.javacpp.opencv_imgproc.dilate;
+import static org.bytedeco.javacpp.opencv_imgproc.getGaussianKernel;
+import static org.bytedeco.javacpp.opencv_imgproc.medianBlur;
+import static org.bytedeco.javacpp.opencv_imgproc.threshold;
+
+
 public class MainActivity extends AppCompatActivity {
 
-    opencv_core.Mat mat;
+    opencv_core.Mat mat,mat2;
 
     AndroidFrameConverter converterToBitmap;
     OpenCVFrameConverter.ToIplImage converterToIplImage;
@@ -41,12 +57,15 @@ public class MainActivity extends AppCompatActivity {
 
     static TesseractOCR mTessOCR;
 
-    static ImageView imgSrc,grayimag;
+    static ImageView imgSrc;
     static TextView txtResult;
 
 
+    public int Temp=1;
+
     Bitmap bitmap;
-    Bitmap bitmap1;
+    Bitmap Gray;
+    Bitmap bin;
 
     public static final int CAMERA_PERM_CODE = 101;
     public static final int CAMERA_REQUEST_CODE = 102;
@@ -55,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
     static TextView[] B_T = new TextView[10];
     static EditText mul;
 
-    public static String regEx="[\n`[email protected]#$%^&*()+=|{}‘'\':;‘,\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。， 、？]";
+
 
     public Matrix_Calculate Matrix = new Matrix_Calculate();
 
@@ -97,13 +116,7 @@ public class MainActivity extends AppCompatActivity {
         mTessOCR = new TesseractOCR(this, language);
 
 
-
-
     }
-
-
-
-
 
 
 
@@ -145,11 +158,31 @@ public class MainActivity extends AppCompatActivity {
             Bitmap image = (Bitmap) data.getExtras().get("data");
             imgSrc.setImageBitmap(image);
 
+            try {
+                String ocrResult = ocrWithEnglish();
+                String newResult = ocrResult.replaceAll("[^\\d]", "");
+                newResult = newResult.replace(""," ").trim();
 
-            String ocrResult = ocrWithEnglish();
-            String newResult = ocrResult.replaceAll(regEx, " ");
-            txtResult.setText(newResult);
-            imgSrc.setDrawingCacheEnabled(false);
+                txtResult.setText(newResult);
+
+                String[] split = newResult.split(" ");
+
+                for (int i=0; i<split.length; i++) {
+                    if(Temp < 10) {
+                        if(split[i]!=" ") {
+                            A_T[Temp].setText(split[i]);
+                            System.out.print(split[i]);
+                            Temp++;
+                        }
+                    }
+                }
+                Temp=1;
+
+                imgSrc.setDrawingCacheEnabled(false);
+            }catch(Exception e){
+
+            }
+
         }
     }
 
@@ -228,31 +261,29 @@ public class MainActivity extends AppCompatActivity {
         imgSrc.setDrawingCacheEnabled(true);
 
 
-
-        imgSrc.invalidate();
         BitmapDrawable drawable = (BitmapDrawable) imgSrc.getDrawable();
         bitmap = drawable.getBitmap();
-
-        opencv_core.IplImage iplImage = this.bitmapToIplImage(bitmap);
-
+        
         converterToBitmap = new AndroidFrameConverter();
         converterToIplImage = new OpenCVFrameConverter.ToIplImage();
         converterToMat = new OpenCVFrameConverter.ToMat();
-
-
+        
         Frame frame = converterToBitmap.convert(bitmap);
 
-        mat = converterToIplImage.convertToMat(frame);
-
-        cvtColor(mat, mat, opencv_imgproc.COLOR_RGB2GRAY);
-        Frame frame1 = converterToMat.convert(mat);
-        bitmap1 = converterToBitmap.convert(frame1);
+        mat = converterToMat.convertToMat(frame);
 
 
 
+        threshold(mat,mat,90,225,THRESH_TOZERO);
+        medianBlur(mat,mat,3);
 
-        imgSrc.setImageBitmap(bitmap1);
-        resString = mTessOCR.getOCRResult(bitmap1);
+        
+        Frame Resultframe = converterToMat.convert(mat);
+        bin = converterToBitmap.convert(Resultframe);
+
+
+        imgSrc.setImageBitmap(bin);
+        resString = mTessOCR.getOCRResult(bin);
 
 
 

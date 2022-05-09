@@ -1,36 +1,52 @@
 package com.example.matrixcaculator;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.googlecode.tesseract.android.TessBaseAPI;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+import org.bytedeco.javacpp.opencv_core;
+import org.bytedeco.javacpp.opencv_imgproc;
+import org.bytedeco.javacv.AndroidFrameConverter;
+import org.bytedeco.javacv.Frame;
+import org.bytedeco.javacv.OpenCVFrameConverter;
+import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
+import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
 
-import org.w3c.dom.Text;
+import static android.content.ContentValues.TAG;
 
 
 public class MainActivity extends AppCompatActivity {
 
+    opencv_core.Mat mat;
+
+    AndroidFrameConverter converterToBitmap;
+    OpenCVFrameConverter.ToIplImage converterToIplImage;
+    OpenCVFrameConverter.ToMat converterToMat;
+
+
     static TesseractOCR mTessOCR;
 
-    static ImageView imgSrc;
+    static ImageView imgSrc,grayimag;
     static TextView txtResult;
+
+
+    Bitmap bitmap;
+    Bitmap bitmap1;
 
     public static final int CAMERA_PERM_CODE = 101;
     public static final int CAMERA_REQUEST_CODE = 102;
@@ -39,10 +55,18 @@ public class MainActivity extends AppCompatActivity {
     static TextView[] B_T = new TextView[10];
     static EditText mul;
 
+    public static String regEx="[\n`[email protected]#$%^&*()+=|{}‘'\':;‘,\\[\\].<>/?~！@#￥%……&*（）——+|{}【】‘；：”“’。， 、？]";
+
     public Matrix_Calculate Matrix = new Matrix_Calculate();
+
+
+
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -72,7 +96,16 @@ public class MainActivity extends AppCompatActivity {
         String language = "eng";
         mTessOCR = new TesseractOCR(this, language);
 
+
+
+
     }
+
+
+
+
+
+
 
     private void askCameraPermissions() {
 
@@ -102,15 +135,20 @@ public class MainActivity extends AppCompatActivity {
         startActivityForResult(camera, CAMERA_REQUEST_CODE);
     }
 
+
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == CAMERA_REQUEST_CODE) {
             Bitmap image = (Bitmap) data.getExtras().get("data");
-            imgSrc.setDrawingCacheEnabled(true);
             imgSrc.setImageBitmap(image);
+
+
             String ocrResult = ocrWithEnglish();
-            txtResult.setText(ocrResult);
+            String newResult = ocrResult.replaceAll(regEx, " ");
+            txtResult.setText(newResult);
             imgSrc.setDrawingCacheEnabled(false);
         }
     }
@@ -188,13 +226,62 @@ public class MainActivity extends AppCompatActivity {
         String resString = "";
 
         imgSrc.setDrawingCacheEnabled(true);
-        Bitmap bitmap = imgSrc.getDrawingCache();
 
-        resString = mTessOCR.getOCRResult(bitmap);
+
+
+        imgSrc.invalidate();
+        BitmapDrawable drawable = (BitmapDrawable) imgSrc.getDrawable();
+        bitmap = drawable.getBitmap();
+
+        opencv_core.IplImage iplImage = this.bitmapToIplImage(bitmap);
+
+        converterToBitmap = new AndroidFrameConverter();
+        converterToIplImage = new OpenCVFrameConverter.ToIplImage();
+        converterToMat = new OpenCVFrameConverter.ToMat();
+
+
+        Frame frame = converterToBitmap.convert(bitmap);
+
+        mat = converterToIplImage.convertToMat(frame);
+
+        cvtColor(mat, mat, opencv_imgproc.COLOR_RGB2GRAY);
+        Frame frame1 = converterToMat.convert(mat);
+        bitmap1 = converterToBitmap.convert(frame1);
+
+
+
+
+        imgSrc.setImageBitmap(bitmap1);
+        resString = mTessOCR.getOCRResult(bitmap1);
+
+
 
         imgSrc.setDrawingCacheEnabled(false);
         return  resString;
     }
+
+
+
+    public Bitmap IplImageToBitmap(opencv_core.IplImage iplImage) {
+        Bitmap bitmap = null;
+        bitmap = Bitmap.createBitmap(iplImage.width(), iplImage.height(),
+                Bitmap.Config.ARGB_8888);
+        bitmap.copyPixelsFromBuffer(iplImage.getByteBuffer());
+        return bitmap;
+    }
+
+
+    public opencv_core.IplImage bitmapToIplImage(Bitmap bitmap) {
+        opencv_core.IplImage iplImage;
+        iplImage = opencv_core.IplImage.create(bitmap.getWidth(), bitmap.getHeight(),
+                IPL_DEPTH_8U, 4);
+        bitmap.copyPixelsToBuffer(iplImage.getByteBuffer());
+        return iplImage;
+    }
+
+
+
+
 
 }
 

@@ -18,6 +18,7 @@ public class Matrix_Calculate {
 
     static String result;
 
+    public static double determinant=0;
 
 
     public String plus(){
@@ -60,6 +61,27 @@ public class Matrix_Calculate {
         return inverse;
     }
 
+    public double determinant(){
+        determinant = A.det();
+        return determinant;
+    }
+
+    public Matrix getL(){
+        LUDecomposition lu = new LUDecomposition(A);
+        Matrix L = lu.getL();
+        Temp_Matrix = L.getArray();
+        return L;
+    }
+
+    public Matrix getU(){
+        LUDecomposition lu = new LUDecomposition(A);
+        Matrix U = lu.getU();
+        Temp_Matrix = U.getArray();
+        return U;
+    }
+
+
+
     public boolean isNonsingular(){
 
         return true;
@@ -68,6 +90,15 @@ public class Matrix_Calculate {
     public double[][] getTemp_Matrix() {
        /* System.out.println(String.valueOf(Temp_Matrix[0][0]));*/
         return Temp_Matrix;
+    }
+
+    public double get_determinant(){
+        return determinant;
+    }
+
+    public double determinantto0(){
+        determinant=0;
+        return determinant;
     }
 
     public void inputtext(int x, int y ,double A_T,double B_T) {

@@ -4,10 +4,13 @@ import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
+import android.graphics.Paint;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -19,31 +22,34 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+
 import org.bytedeco.javacpp.opencv_core;
-import org.bytedeco.javacpp.opencv_imgproc;
 import org.bytedeco.javacv.AndroidFrameConverter;
 import org.bytedeco.javacv.Frame;
 import org.bytedeco.javacv.OpenCVFrameConverter;
-import org.opencv.imgproc.Imgproc;
+import org.opencv.core.MatOfPoint;
 
-import static org.bytedeco.javacpp.opencv_core.IPL_DEPTH_8U;
-import static org.bytedeco.javacpp.opencv_imgproc.COLOR_BayerGB2GRAY;
-import static org.bytedeco.javacpp.opencv_imgproc.COLOR_GRAY2BGR;
-import static org.bytedeco.javacpp.opencv_imgproc.COLOR_GRAY2RGB;
-import static org.bytedeco.javacpp.opencv_imgproc.COLOR_RGB2GRAY;
-import static org.bytedeco.javacpp.opencv_imgproc.CV_RGB2GRAY;
-import static org.bytedeco.javacpp.opencv_imgproc.GaussianBlur;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.bytedeco.javacpp.opencv_imgproc.CHAIN_APPROX_SIMPLE;
+import static org.bytedeco.javacpp.opencv_imgproc.COLOR_RGB2BGR;
+import static org.bytedeco.javacpp.opencv_imgproc.CV_RETR_EXTERNAL;
+import static org.bytedeco.javacpp.opencv_imgproc.MORPH_RECT;
+import static org.bytedeco.javacpp.opencv_imgproc.RETR_EXTERNAL;
+import static org.bytedeco.javacpp.opencv_imgproc.THRESH_BINARY;
+import static org.bytedeco.javacpp.opencv_imgproc.THRESH_BINARY_INV;
 import static org.bytedeco.javacpp.opencv_imgproc.THRESH_TOZERO;
-import static org.bytedeco.javacpp.opencv_imgproc.blur;
+import static org.bytedeco.javacpp.opencv_imgproc.boundingRect;
+import static org.bytedeco.javacpp.opencv_imgproc.cvBoundingRect;
 import static org.bytedeco.javacpp.opencv_imgproc.cvtColor;
-
-import static android.content.ContentValues.TAG;
-
-
 import static org.bytedeco.javacpp.opencv_imgproc.dilate;
-import static org.bytedeco.javacpp.opencv_imgproc.getGaussianKernel;
+import static org.bytedeco.javacpp.opencv_imgproc.erode;
+import static org.bytedeco.javacpp.opencv_imgproc.findContours;
+import static org.bytedeco.javacpp.opencv_imgproc.getStructuringElement;
 import static org.bytedeco.javacpp.opencv_imgproc.medianBlur;
 import static org.bytedeco.javacpp.opencv_imgproc.threshold;
+
 
 
 public class MainActivity extends AppCompatActivity {
@@ -61,7 +67,10 @@ public class MainActivity extends AppCompatActivity {
     static TextView txtResult;
 
 
+
+
     public int Temp=1;
+    public int recognition=0;
 
     Bitmap bitmap;
     Bitmap Gray;
@@ -167,16 +176,31 @@ public class MainActivity extends AppCompatActivity {
 
                 String[] split = newResult.split(" ");
 
-                for (int i=0; i<split.length; i++) {
-                    if(Temp < 10) {
-                        if(split[i]!=" ") {
-                            A_T[Temp].setText(split[i]);
-                            System.out.print(split[i]);
-                            Temp++;
+                if(recognition==0) {
+                    for (int i = 0; i < split.length; i++) {
+                        if (Temp < 10) {
+                            if (split[i] != " ") {
+                                A_T[Temp].setText(split[i]);
+                                System.out.print(split[i]);
+                                Temp++;
+                            }
                         }
                     }
+                    Temp = 1;
                 }
-                Temp=1;
+
+                if(recognition==1) {
+                    for (int i = 0; i < split.length; i++) {
+                        if (Temp < 10) {
+                            if (split[i] != " ") {
+                                B_T[Temp].setText(split[i]);
+                                System.out.print(split[i]);
+                                Temp++;
+                            }
+                        }
+                    }
+                    Temp = 1;
+                }
 
                 imgSrc.setDrawingCacheEnabled(false);
             }catch(Exception e){
@@ -225,6 +249,26 @@ public class MainActivity extends AppCompatActivity {
         this.results_intent();
     }
 
+    public void Matrix_determinant(View view) {
+        inputtext();
+        Matrix.determinant();
+        this.results_intent();
+    }
+
+    public void matrix_getL(View view) {
+        inputtext();
+        Matrix.getL();
+        this.results_intent();
+    }
+
+    public void matrix_getU(View view) {
+        inputtext();
+        Matrix.getU();
+        this.results_intent();
+
+    }
+
+
     public void inputtext() {
 
         try {
@@ -252,30 +296,36 @@ public class MainActivity extends AppCompatActivity {
 
     public void recognition(View view) {
         askCameraPermissions();
+        recognition=0;
 
     }
-
+    public void recognitionB(View view) {
+        askCameraPermissions();
+        recognition=1;
+    }
     public String ocrWithEnglish() {
         String resString = "";
 
         imgSrc.setDrawingCacheEnabled(true);
 
+        setLocked(imgSrc);
 
         BitmapDrawable drawable = (BitmapDrawable) imgSrc.getDrawable();
         bitmap = drawable.getBitmap();
-        
+
+
         converterToBitmap = new AndroidFrameConverter();
         converterToIplImage = new OpenCVFrameConverter.ToIplImage();
         converterToMat = new OpenCVFrameConverter.ToMat();
-        
+
         Frame frame = converterToBitmap.convert(bitmap);
 
-        mat = converterToMat.convertToMat(frame);
+        mat = converterToIplImage.convertToMat(frame);
 
 
 
-        threshold(mat,mat,90,225,THRESH_TOZERO);
-        medianBlur(mat,mat,3);
+        threshold(mat,mat,140,225,THRESH_BINARY);
+
 
         
         Frame Resultframe = converterToMat.convert(mat);
@@ -291,26 +341,15 @@ public class MainActivity extends AppCompatActivity {
         return  resString;
     }
 
+    public static void  setLocked(ImageView v)
+    {
+        ColorMatrix matrix = new ColorMatrix();
+        matrix.setSaturation(1);  //0 means grayscale
+        ColorMatrixColorFilter cf = new ColorMatrixColorFilter(matrix);
+        v.setColorFilter(cf);
+        v.setImageAlpha(120);
 
-
-    public Bitmap IplImageToBitmap(opencv_core.IplImage iplImage) {
-        Bitmap bitmap = null;
-        bitmap = Bitmap.createBitmap(iplImage.width(), iplImage.height(),
-                Bitmap.Config.ARGB_8888);
-        bitmap.copyPixelsFromBuffer(iplImage.getByteBuffer());
-        return bitmap;
     }
-
-
-    public opencv_core.IplImage bitmapToIplImage(Bitmap bitmap) {
-        opencv_core.IplImage iplImage;
-        iplImage = opencv_core.IplImage.create(bitmap.getWidth(), bitmap.getHeight(),
-                IPL_DEPTH_8U, 4);
-        bitmap.copyPixelsToBuffer(iplImage.getByteBuffer());
-        return iplImage;
-    }
-
-
 
 
 

@@ -21,6 +21,7 @@ public class TesseractOCR {
 
     public TesseractOCR(Context context, String language) {
         mTess = new TessBaseAPI();
+        mTess.setVariable(TessBaseAPI.VAR_CHAR_WHITELIST, "0123456789");
         boolean fileExistFlag = false;
 
         AssetManager assetManager = context.getAssets();

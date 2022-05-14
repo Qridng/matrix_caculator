@@ -324,7 +324,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-        threshold(mat,mat,140,225,THRESH_BINARY);
+        threshold(mat,mat,100,225,THRESH_BINARY);
 
 
         
